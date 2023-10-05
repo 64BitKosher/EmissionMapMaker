@@ -30,42 +30,72 @@
             max-width: 100%;
             height: auto;
         }
+
+        #upload-button {
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
+    <div>
+        <input type="file" id="upload-button" accept="image/*">
+    </div>
+    
     <div id="image-container">
-        <img id="original-image" src="your-image.jpg" alt="Original Image">
+        <img id="original-image" src="" alt="Original Image">
         <canvas id="emission-canvas"></canvas>
+        <div id="emission-overlay"></div>
     </div>
 
     <script>
+        const uploadButton = document.getElementById('upload-button');
         const image = document.getElementById('original-image');
         const canvas = document.getElementById('emission-canvas');
         const ctx = canvas.getContext('2d');
         const emissionOverlay = document.getElementById('emission-overlay');
 
-        image.onload = function() {
-            canvas.width = image.width;
-            canvas.height = image.height;
-            ctx.drawImage(image, 0, 0, image.width, image.height);
+        uploadButton.addEventListener('change', handleImageUpload);
 
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const pixels = imageData.data;
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
 
-            for (let i = 0; i < pixels.length; i += 4) {
-                // Check if the pixel is different from the rest (e.g., not white)
-                if (pixels[i] !== 255 || pixels[i + 1] !== 255 || pixels[i + 2] !== 255) {
-                    // Apply emission effect (e.g., change the color to red)
-                    pixels[i] = 255; // Red
-                    pixels[i + 1] = 0; // Green
-                    pixels[i + 2] = 0; // Blue
-                }
+            if (file) {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const imgSrc = e.target.result;
+                    image.src = imgSrc;
+                    applyEmissionEffect(image);
+                };
+
+                reader.readAsDataURL(file);
             }
+        }
 
-            ctx.putImageData(imageData, 0, 0);
+        function applyEmissionEffect(image) {
+            image.onload = function() {
+                canvas.width = image.width;
+                canvas.height = image.height;
+                ctx.drawImage(image, 0, 0, image.width, image.height);
 
-            // Show the emission overlay
-            emissionOverlay.style.backgroundImage = `url(${canvas.toDataURL()})`;
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const pixels = imageData.data;
+
+                for (let i = 0; i < pixels.length; i += 4) {
+                    // Check if the pixel is different from the rest (e.g., not white)
+                    if (pixels[i] !== 255 || pixels[i + 1] !== 255 || pixels[i + 2] !== 255) {
+                        // Apply emission effect (e.g., change the color to red)
+                        pixels[i] = 255; // Red
+                        pixels[i + 1] = 0; // Green
+                        pixels[i + 2] = 0; // Blue
+                    }
+                }
+
+                ctx.putImageData(imageData, 0, 0);
+
+                // Show the emission overlay
+                emissionOverlay.style.backgroundImage = `url(${canvas.toDataURL()})`;
+            };
         }
     </script>
 </body>
